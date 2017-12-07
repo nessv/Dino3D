@@ -1,2 +1,3 @@
 venv/*
 engine/*.pyc
+engine/_pycache_
