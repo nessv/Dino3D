@@ -1,5 +1,5 @@
-venv/*
-engine/*.pyc
-engine/__pycache__/*
+Game1/venv/*
+Game1/engine/*.pyc
+Game1/engine/__pycache__/*
 .idea/*
-venv1/*
+Game1/venv1/*
