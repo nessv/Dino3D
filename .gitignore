@@ -3,3 +3,5 @@ Game1/engine/*.pyc
 Game1/engine/__pycache__/*
 .idea/*
 Game1/venv1/*
+venv/*
+.DS_Store
