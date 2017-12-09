@@ -8,6 +8,48 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+gravity = -0.02
+
+
+class Cube(object):
+    sides = ((0,1,2,3), (3,2,7,6), (6,7,5,4),
+             (4,5,1,0), (1,5,7,2), (4,0,3,6))
+
+    def __init__(self, position, size, color):
+        self.position = position
+        self.color = color
+        x, y, z = map(lambda i: i/2, size)
+        self.vertices = (
+            (x, -y, -z), (x, y, -z),
+            (-x, y,-z), (-x, -y, -z),
+            (x, -y, z), (x, y, z),
+            (-x, -y, z), (-x, y,  z))
+
+    def render(self):
+        glPushMatrix()
+        glTranslatef(*self.position)
+        glBegin(GL_QUADS)
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, self.color)
+        for side in Cube.sides:
+            for v in side:
+                glVertex3fv(self.vertices[v])
+        glEnd()
+        glPopMatrix()
+
+
+class Block(Cube):
+    color = (0, 0.25, 0, 1)
+    speed = 0.02
+
+    def __init__(self, position, size):
+        super(Block, self).__init__(position, (size, size, size), Block.color)
+        self.size = size
+
+    def update(self, dt):
+        x, y, z = self.position
+        z += Block.speed * dt
+        self.position = x, y, z
+
 
 class Light(object):
     enabled = False
@@ -75,7 +117,7 @@ class Player(Sphere):
         if not self.on_ground:
             return
         else:
-            self.velocity = 0.7
+            self.velocity = 0.6
             self.on_ground = False
 
     def update(self):
@@ -88,9 +130,10 @@ class Player(Sphere):
         if not self.on_ground:
             if self.velocity < 0:
                 self.falling = True
-            self.velocity += -0.04
+            self.velocity += gravity
             self.y += self.velocity
             self.position = (self.x, self.y, self.z)
+
 
 class App(object):
     def __init__(self, width=800, height=600):
@@ -100,8 +143,12 @@ class App(object):
         self.height = height
         self.game_over = False
         self.random_dt = 0
+        self.blocks = []
         self.light = Light(GL_LIGHT0, (0, 15, -25, 1))
-        self.player = Player(radius=1, position=(0, 3, 0), color=(0, 1, 0, 1))
+        self.player = Player(radius=1, position=(0, 3, 0), color=(0.25, 0, 0, 0))
+        self.ground = Cube(position=(0, -1, -20),
+                           size=(16, 1, 60),
+                           color=(1, 1, 1, 1))
 
     def start(self):
         pygame.init()
@@ -127,6 +174,12 @@ class App(object):
             if not self.game_over:
                 self.display()
                 dt = clock.tick(self.fps)
+                for block in self.blocks:
+                    block.update(dt)
+                self.add_random_block(dt)
+                self.clear_past_blocks()
+                self.player.update()
+                self.check_collisions()
                 self.process_input()
 
     def display(self):
@@ -136,8 +189,11 @@ class App(object):
                   0, 0, -5,
                   0, 1, 0)
         self.light.render()
+        for block in self.blocks:
+            block.render()
         self.player.update()
         self.player.render()
+        self.ground.render()
         pygame.display.flip()
 
     def process_input(self):
@@ -145,6 +201,38 @@ class App(object):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.player.jump()
+
+    def check_collisions(self):
+        blocks = filter(lambda x: 0 < x.position[2] < 1, self.blocks)
+        x = self.player.position[0]
+        r = self.player.radius
+        for block in blocks:
+            x1 = block.position[1]
+            s = block.size / 2
+            if x1-s < x-r < x1+s or x1-s < x+r < x1+s:
+                self.game_over = True
+                print("Game over!")
+
+    def add_random_block(self, dt):
+        self.random_dt += dt
+        if self.random_dt >= 800:
+            r = random.random()
+            if r < 0.1:
+                self.random_dt = 0
+                self.generate_block(r)
+
+    def generate_block(self, r):
+        # size = 7 if r < 0.03 else 5
+        size = 2
+        offset = 0
+        self.blocks.append(Block((offset, 0, -40), size))
+
+    def clear_past_blocks(self):
+        blocks = filter(lambda x: x.position[2] > 5,
+                        self.blocks)
+        for block in blocks:
+            self.blocks.remove(block)
+            del block
 
 
 if __name__ == '__main__':
