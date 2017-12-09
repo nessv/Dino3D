@@ -8,11 +8,12 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+gravity = -0.5
 
 class Cube(object):
     sides = ((0,1,2,3), (3,2,7,6), (6,7,5,4),
              (4,5,1,0), (1,5,7,2), (4,0,3,6))
-    
+
     def __init__(self, position, size, color):
         self.position = position
         self.color = color
@@ -38,7 +39,7 @@ class Cube(object):
 class Block(Cube):
     color = (0, 0, 1, 1)
     speed = 0.01
-    
+
     def __init__(self, position, size):
         super(Block, self).__init__(position, (size, 1, 1), Block.color)
         self.size = size
@@ -83,12 +84,14 @@ class Light(object):
 class Sphere(object):
     slices = 40
     stacks = 40
-    
+
     def __init__(self, radius, position, color):
         self.radius = radius
         self.position = position
         self.color = color
         self.quadratic = gluNewQuadric()
+        self.on_ground = False
+        self.velocity = 0
 
     def render(self):
         glPushMatrix()
@@ -97,6 +100,19 @@ class Sphere(object):
         gluSphere(self.quadratic, self.radius, Sphere.slices, Sphere.stacks)
         glPopMatrix()
 
+    def update(self):
+        self.velocity += gravity
+        x, y, z = self.position
+        y += self.velocity
+        print(y)
+        if y == 0:
+            self.on_ground = True
+
+    def jump (self):
+        if not self.on_ground:
+            return
+        self.velocity = 9
+        self.on_ground = False
 
 class App(object):
     def __init__(self, width=800, height=600):
@@ -106,6 +122,7 @@ class App(object):
         self.height = height
         self.game_over = False
         self.random_dt = 0
+        self.jump_end = False
         self.blocks = []
         self.light = Light(GL_LIGHT0, (0, 15, -25, 1))
         self.player = Sphere(1, position=(0, 0, 0),
@@ -113,7 +130,7 @@ class App(object):
         self.ground = Cube(position=(0, -1, -20),
                            size=(16, 1, 60),
                            color=(1, 1, 1, 1))
-        
+
     def start(self):
         pygame.init()
         pygame.display.set_mode((self.width, self.height),
@@ -142,7 +159,7 @@ class App(object):
                 for block in self.blocks:
                     block.update(dt)
                 self.clear_past_blocks()
-                self.add_random_block(dt)
+                self.player.update()
                 self.check_collisions()
                 self.process_input(dt)
 
@@ -165,7 +182,7 @@ class App(object):
             if r < 0.1:
                 self.random_dt = 0
                 self.generate_block(r)
-            
+
     def generate_block(self, r):
         size = 7 if r < 0.03 else 5
         offset = random.choice([-4, 0, 4])
@@ -187,6 +204,8 @@ class App(object):
         self.light.render()
         for block in self.blocks:
             block.render()
+        x, y, z = self.player.position
+
         self.player.render()
         self.ground.render()
         pygame.display.flip()
@@ -198,6 +217,9 @@ class App(object):
             x -= 0.01 * dt
         if pressed[K_RIGHT]:
             x += 0.01 * dt
+        if pygame.KEYDOWN:
+            if pressed[K_SPACE]:
+                self.player.jump()
         x = max(min(x, 7), -7)
         self.player.position = (x, y, z)
 
