@@ -1,7 +1,9 @@
 import sys
 import math
 import random
-
+import cocos
+from cocos.menu import *
+import pyglet.app
 import pygame
 from pygame.locals import *
 
@@ -102,6 +104,39 @@ class Sphere(object):
         glPopMatrix()
 
 
+# class Player(Cube):
+#     def __init__(self, position, size, color):
+#         super().__init__(position, size, color)
+#         x, y, z = position
+#         self.x = x
+#         self.y = y
+#         self.z = z
+#         self.velocity = 0
+#         self.falling = True
+#         self.on_ground = False
+#
+#     def jump(self):
+#         if not self.on_ground:
+#             return
+#         else:
+#             self.velocity = 0.6
+#             self.on_ground = False
+#
+#     def update(self):
+#         if self.y < 0:
+#             if self.falling:
+#                 self.on_ground = True
+#                 self.velocity = 0
+#                 self.falling = False
+#
+#         if not self.on_ground:
+#             if self.velocity < 0:
+#                 self.falling = True
+#             self.velocity += gravity
+#             self.y += self.velocity
+#             self.position = (self.x, self.y, self.z)
+
+
 class Player(Sphere):
     def __init__(self, radius, position, color):
         super().__init__(radius, position, color)
@@ -143,9 +178,11 @@ class App(object):
         self.height = height
         self.game_over = False
         self.random_dt = 0
+        self.textdata = ""
         self.blocks = []
         self.light = Light(GL_LIGHT0, (0, 15, -25, 1))
-        self.player = Player(radius=1, position=(0, 3, 0), color=(0.25, 0, 0, 0))
+        self.player = Player(radius=1, position=(0, 3, 0), color=(0.25, 0, 1, 0))
+        # self.player = Player(position=(0, 3, 0), size=(2, 2, 2), color=(1, 1, 1, 1))
         self.ground = Cube(position=(0, -1, -20),
                            size=(16, 1, 60),
                            color=(1, 1, 1, 1))
@@ -194,13 +231,23 @@ class App(object):
         self.player.update()
         self.player.render()
         self.ground.render()
+        self.drawtext("hello")
         pygame.display.flip()
+
+    def drawtext(self, text):
+        font = pygame.font.Font(None, 30)
+        textSurface = font.render(text, True, (255, 255, 255, 255), (104, 104, 104, 104))
+        self.textdata = pygame.image.tostring(textSurface, "RGBA", True)
+        glRasterPos3d(*(5, -1, 0))
+        glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, self.textdata)
 
     def process_input(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.player.jump()
+                if event.key == pygame.K_ESCAPE:
+                    show_menu()
 
     def check_collisions(self):
         blocks = filter(lambda x: 0 < x.position[2] < 1, self.blocks)
@@ -222,19 +269,47 @@ class App(object):
                 self.generate_block(r)
 
     def generate_block(self, r):
-        # size = 7 if r < 0.03 else 5
         size = 2
         offset = 0
         self.blocks.append(Block((offset, 0, -40), size))
 
     def clear_past_blocks(self):
-        blocks = filter(lambda x: x.position[2] > 5,
-                        self.blocks)
+        blocks = filter(lambda x: x.position[2] > 5, self.blocks)
         for block in blocks:
             self.blocks.remove(block)
             del block
 
 
+class MainMenu(Menu):
+    def __init__(self):
+        super(MainMenu, self).__init__('Dinosaurito Jump 3D')
+        self.font_title['font_name'] = 'Times New Roman'
+        self.font_title['font_size'] = 60
+        self.font_title['bold'] = True
+        self.font_item['font_name'] = 'Times New Roman'
+        self.font_item_selected['font_name'] = 'Times New Roman'
+
+        m1 = MenuItem('New Game', self.start_game)
+        m2 = MenuItem('Statistics', self.show_statistics)
+        m3 = MenuItem('Quit', pyglet.app.exit)
+        self.create_menu([m1, m2, m3], shake(), shake_back())
+
+    def start_game(self):
+        print('Starting a new game!')
+        app = App()
+        app.start()
+
+    def show_statistics(self):
+        print("Game statistics")
+
+
+def show_menu():
+    cocos.director.director.init(caption='Sample app', width=800, height=600)
+    scene = cocos.scene.Scene(MainMenu())
+    cocos.director.director.run(scene)
+
+
 if __name__ == '__main__':
-    app = App()
-    app.start()
+    # Main Game loop
+    while True:
+        show_menu()
