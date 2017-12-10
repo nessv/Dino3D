@@ -204,12 +204,14 @@ class App(object):
 
     def check_collisions(self):
         blocks = filter(lambda x: 0 < x.position[2] < 1, self.blocks)
-        x = self.player.position[0]
+        # My player current position
+        y = self.player.position[1]
         r = self.player.radius
+
         for block in blocks:
-            x1 = block.position[1]
+            y1 = block.position[1]
             s = block.size / 2
-            if x1-s < x-r < x1+s or x1-s < x+r < x1+s:
+            if y1 + s > y - r:
                 self.game_over = True
                 print("Game over!")
 
