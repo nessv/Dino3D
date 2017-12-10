@@ -263,6 +263,7 @@ class App(object):
             y1 = block.position[1]
             s = block.size / 2
             if y1 + s > y - r:
+                self.save_score()
                 self.game_over = True
                 print("Game over!")
 
@@ -295,6 +296,11 @@ class App(object):
 
         self.time = ("{}:{}".format(self.minutes, self.seconds))
         self.milliseconds += self.clock.tick_busy_loop(60)
+
+    def save_score(self):
+        file = open("score.txt", "a")
+        file.write('\n' + self.time)
+        file.close()
 
 
 if __name__ == '__main__':
