@@ -1,31 +1,27 @@
 import sys
-import math
 import random
-import cocos
-from cocos.menu import *
-import pyglet.app
 import pygame
 from pygame.locals import *
-
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
 gravity = -0.02
+TIMEEVENT = pygame.USEREVENT + 1
 
 
 class Cube(object):
-    sides = ((0,1,2,3), (3,2,7,6), (6,7,5,4),
-             (4,5,1,0), (1,5,7,2), (4,0,3,6))
+    sides = ((0, 1, 2, 3), (3, 2, 7, 6), (6, 7, 5, 4),
+             (4, 5, 1, 0), (1, 5, 7, 2), (4, 0, 3, 6))
 
     def __init__(self, position, size, color):
         self.position = position
         self.color = color
-        x, y, z = map(lambda i: i/2, size)
+        x, y, z = map(lambda i: i / 2, size)
         self.vertices = (
             (x, -y, -z), (x, y, -z),
-            (-x, y,-z), (-x, -y, -z),
+            (-x, y, -z), (-x, -y, -z),
             (x, -y, z), (x, y, z),
-            (-x, -y, z), (-x, y,  z))
+            (-x, -y, z), (-x, y, z))
 
     def render(self):
         glPushMatrix()
@@ -55,10 +51,10 @@ class Block(Cube):
 
 class Light(object):
     enabled = False
-    colors = [(1.,1.,1.,1.),
-              (1.,0.5,0.5,1.),
-              (0.5,1.,0.5,1.),
-              (0.5,0.5,1.,1.)]
+    colors = [(1., 1., 1., 1.),
+              (1., 0.5, 0.5, 1.),
+              (0.5, 1., 0.5, 1.),
+              (0.5, 0.5, 1., 1.)]
 
     def __init__(self, light_id, position):
         self.light_id = light_id
@@ -180,6 +176,12 @@ class App(object):
         self.random_dt = 0
         self.textdata = ""
         self.blocks = []
+        # timer variables
+        self.milliseconds = 0
+        self.minutes = 0
+        self.seconds = 0
+        self.time = "0:0"
+        self.clock = pygame.time.Clock()
         self.light = Light(GL_LIGHT0, (0, 15, -25, 1))
         self.player = Player(radius=1, position=(0, 3, 0), color=(0.25, 0, 1, 0))
         # self.player = Player(position=(0, 3, 0), size=(2, 2, 2), color=(1, 1, 1, 1))
@@ -203,6 +205,8 @@ class App(object):
 
     def main_loop(self):
         clock = pygame.time.Clock()
+        pygame.time.set_timer(TIMEEVENT, 1000)
+
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -217,7 +221,7 @@ class App(object):
                 self.clear_past_blocks()
                 self.player.update()
                 self.check_collisions()
-                self.process_input()
+                self.process_events()
 
     def display(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -231,7 +235,7 @@ class App(object):
         self.player.update()
         self.player.render()
         self.ground.render()
-        self.drawtext("hello")
+        self.drawtext(self.time)
         pygame.display.flip()
 
     def drawtext(self, text):
@@ -241,13 +245,13 @@ class App(object):
         glRasterPos3d(*(5, -1, 0))
         glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, self.textdata)
 
-    def process_input(self):
+    def process_events(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.player.jump()
-                if event.key == pygame.K_ESCAPE:
-                    show_menu()
+            if event.type == TIMEEVENT:
+                self.set_time()
 
     def check_collisions(self):
         blocks = filter(lambda x: 0 < x.position[2] < 1, self.blocks)
@@ -256,7 +260,7 @@ class App(object):
         for block in blocks:
             x1 = block.position[1]
             s = block.size / 2
-            if x1-s < x-r < x1+s or x1-s < x+r < x1+s:
+            if x1 - s < x - r < x1 + s or x1 - s < x + r < x1 + s:
                 self.game_over = True
                 print("Game over!")
 
@@ -266,9 +270,9 @@ class App(object):
             r = random.random()
             if r < 0.1:
                 self.random_dt = 0
-                self.generate_block(r)
+                self.generate_block()
 
-    def generate_block(self, r):
+    def generate_block(self):
         size = 2
         offset = 0
         self.blocks.append(Block((offset, 0, -40), size))
@@ -279,37 +283,18 @@ class App(object):
             self.blocks.remove(block)
             del block
 
+    def set_time(self):
+        if self.milliseconds > 1000:
+            self.seconds += 1
+            self.milliseconds -= 1000
+        if self.seconds > 60:
+            self.minutes += 1
+            self.seconds -= 60
 
-class MainMenu(Menu):
-    def __init__(self):
-        super(MainMenu, self).__init__('Dinosaurito Jump 3D')
-        self.font_title['font_name'] = 'Times New Roman'
-        self.font_title['font_size'] = 60
-        self.font_title['bold'] = True
-        self.font_item['font_name'] = 'Times New Roman'
-        self.font_item_selected['font_name'] = 'Times New Roman'
-
-        m1 = MenuItem('New Game', self.start_game)
-        m2 = MenuItem('Statistics', self.show_statistics)
-        m3 = MenuItem('Quit', pyglet.app.exit)
-        self.create_menu([m1, m2, m3], shake(), shake_back())
-
-    def start_game(self):
-        print('Starting a new game!')
-        app = App()
-        app.start()
-
-    def show_statistics(self):
-        print("Game statistics")
-
-
-def show_menu():
-    cocos.director.director.init(caption='Sample app', width=800, height=600)
-    scene = cocos.scene.Scene(MainMenu())
-    cocos.director.director.run(scene)
+        self.time = ("{}:{}".format(self.minutes, self.seconds))
+        self.milliseconds += self.clock.tick_busy_loop(60)
 
 
 if __name__ == '__main__':
-    # Main Game loop
-    while True:
-        show_menu()
+    app = App()
+    app.start()
