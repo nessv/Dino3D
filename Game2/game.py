@@ -100,39 +100,6 @@ class Sphere(object):
         glPopMatrix()
 
 
-# class Player(Cube):
-#     def __init__(self, position, size, color):
-#         super().__init__(position, size, color)
-#         x, y, z = position
-#         self.x = x
-#         self.y = y
-#         self.z = z
-#         self.velocity = 0
-#         self.falling = True
-#         self.on_ground = False
-#
-#     def jump(self):
-#         if not self.on_ground:
-#             return
-#         else:
-#             self.velocity = 0.6
-#             self.on_ground = False
-#
-#     def update(self):
-#         if self.y < 0:
-#             if self.falling:
-#                 self.on_ground = True
-#                 self.velocity = 0
-#                 self.falling = False
-#
-#         if not self.on_ground:
-#             if self.velocity < 0:
-#                 self.falling = True
-#             self.velocity += gravity
-#             self.y += self.velocity
-#             self.position = (self.x, self.y, self.z)
-
-
 class Player(Sphere):
     def __init__(self, radius, position, color):
         super().__init__(radius, position, color)
@@ -168,6 +135,7 @@ class Player(Sphere):
 
 class App(object):
     def __init__(self, width=800, height=600):
+        print("here")
         self.title = 'My first OpenGL game'
         self.fps = 60
         self.width = width
