@@ -4,4 +4,5 @@ Game1/engine/__pycache__/*
 .idea/*
 Game1/venv1/*
 venv/*
+Game2/*.pyc
 .DS_Store
