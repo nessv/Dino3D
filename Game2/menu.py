@@ -32,7 +32,7 @@ dt = 1 / FPS
 
 def start():
     app = game.App()
-    app.Start()
+    app.start()
 
 
 def main_background():
@@ -57,15 +57,7 @@ play_menu = pygameMenu.Menu(surface,
                             color_selected=COLOR_WHITE,
                             onclose=PYGAME_MENU_DISABLE_CLOSE
                             )
-# When pressing return -> play(DIFFICULTY[0], font)
-# play_menu.add_option('Play', play_function, DIFFICULTY,
-#                      pygame.font.Font(pygameMenu.fonts.FONT_FRANCHISE, 30))
-# play_menu.add_selector('Select difficulty', [('Easy', 'EASY'),
-#                                              ('Medium', 'MEDIUM'),
-#                                              ('Hard', 'HARD')],
-#                        onreturn=None,
-#                        onchange=change_difficulty)
-# play_menu.add_option('Return to main menu', PYGAME_MENU_BACK)
+
 play_menu.add_option('Play', start)
 
 # ABOUT MENU

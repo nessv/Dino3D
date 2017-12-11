@@ -6,3 +6,5 @@ Game1/venv1/*
 venv/*
 Game2/*.pyc
 .DS_Store
+Game2/pygameMenu/__pycache__
+Game2/score.txt
