@@ -10,19 +10,20 @@ from OpenGL.GLU import *
 
 gravity = -0.5
 
+
 class Cube(object):
-    sides = ((0,1,2,3), (3,2,7,6), (6,7,5,4),
-             (4,5,1,0), (1,5,7,2), (4,0,3,6))
+    sides = ((0, 1, 2, 3), (3, 2, 7, 6), (6, 7, 5, 4),
+             (4, 5, 1, 0), (1, 5, 7, 2), (4, 0, 3, 6))
 
     def __init__(self, position, size, color):
         self.position = position
         self.color = color
-        x, y, z = map(lambda i: i/2, size)
+        x, y, z = map(lambda i: i / 2, size)
         self.vertices = (
             (x, -y, -z), (x, y, -z),
-            (-x, y,-z), (-x, -y, -z),
+            (-x, y, -z), (-x, -y, -z),
             (x, -y, z), (x, y, z),
-            (-x, -y, z), (-x, y,  z))
+            (-x, -y, z), (-x, y, z))
 
     def render(self):
         glPushMatrix()
@@ -52,10 +53,10 @@ class Block(Cube):
 
 class Light(object):
     enabled = False
-    colors = [(1.,1.,1.,1.),
-              (1.,0.5,0.5,1.),
-              (0.5,1.,0.5,1.),
-              (0.5,0.5,1.,1.)]
+    colors = [(1., 1., 1., 1.),
+              (1., 0.5, 0.5, 1.),
+              (0.5, 1., 0.5, 1.),
+              (0.5, 0.5, 1., 1.)]
 
     def __init__(self, light_id, position):
         self.light_id = light_id
@@ -108,11 +109,12 @@ class Sphere(object):
         if y == 0:
             self.on_ground = True
 
-    def jump (self):
+    def jump(self):
         if not self.on_ground:
             return
         self.velocity = 9
         self.on_ground = False
+
 
 class App(object):
     def __init__(self, width=800, height=600):
@@ -171,7 +173,7 @@ class App(object):
         for block in blocks:
             x1 = block.position[0]
             s = block.size / 2
-            if x1-s < x-r < x1+s or x1-s < x+r < x1+s:
+            if x1 - s < x - r < x1 + s or x1 - s < x + r < x1 + s:
                 self.game_over = True
                 print("Game over!")
 
