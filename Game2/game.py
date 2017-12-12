@@ -135,8 +135,7 @@ class Player(Sphere):
 
 class App(object):
     def __init__(self, width=800, height=600):
-        print("here")
-        self.title = 'My first OpenGL game'
+        self.title = 'Dinosaurito 3D'
         self.fps = 60
         self.width = width
         self.height = height
@@ -149,6 +148,7 @@ class App(object):
         self.minutes = 0
         self.seconds = 0
         self.time = "0:0"
+        self.lives = 3
         self.clock = pygame.time.Clock()
         self.light = Light(GL_LIGHT0, (0, 15, -25, 1))
         self.player = Player(radius=1, position=(0, 3, 0), color=(0.25, 0, 1, 0))
@@ -190,6 +190,9 @@ class App(object):
                 self.player.update()
                 self.check_collisions()
                 self.process_events()
+            else:
+                print("Game Over!")
+                return
 
     def display(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -203,14 +206,15 @@ class App(object):
         self.player.update()
         self.player.render()
         self.ground.render()
-        self.drawtext(self.time)
+        self.drawtext("Lives: " + str(self.lives), position=(4.8, 0, 0), size=30)
+        self.drawtext("Score: " + self.time, position=(5, -1, 0), size=30)
         pygame.display.flip()
 
-    def drawtext(self, text):
-        font = pygame.font.Font(None, 30)
+    def drawtext(self, text, position, size):
+        font = pygame.font.Font(None, size)
         textSurface = font.render(text, True, (255, 255, 255, 255), (104, 104, 104, 104))
         self.textdata = pygame.image.tostring(textSurface, "RGBA", True)
-        glRasterPos3d(*(5, -1, 0))
+        glRasterPos3d(*position)
         glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, self.textdata)
 
     def process_events(self):
@@ -222,7 +226,7 @@ class App(object):
                 self.set_time()
 
     def check_collisions(self):
-        blocks = filter(lambda x: 0 < x.position[2] < 1, self.blocks)
+        blocks = filter(lambda x: 0 < x.position[2] < 0.4, self.blocks)
         # My player current position
         y = self.player.position[1]
         r = self.player.radius
@@ -231,9 +235,11 @@ class App(object):
             y1 = block.position[1]
             s = block.size / 2
             if y1 + s > y - r:
-                self.save_score()
-                self.game_over = True
-                print("Game over!")
+                if self.lives == 1:
+                    self.save_score()
+                    self.game_over = True
+                else:
+                    self.lives -= 1
 
     def add_random_block(self, dt):
         self.random_dt += dt
